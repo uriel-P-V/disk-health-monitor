@@ -9,6 +9,9 @@ import shutil
 import time
 import os
 
+class StorageError(Exception):
+    """Raised when disk read operation fails."""
+    pass
 
 class DiskMonitor:
 
@@ -28,6 +31,12 @@ class DiskMonitor:
         Returns:
             dict with usage stats and health status
         """
+
+        try:
+            total, used, free = shutil.disk_usage(path)
+        except OSError as e:
+            raise StorageError(f"Failed to read disk usage for {path}: {e}")
+        
         if not os.path.exists(path):
             raise ValueError(f"Path does not exist: {path}")
 
