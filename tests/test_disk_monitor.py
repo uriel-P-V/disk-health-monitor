@@ -44,3 +44,17 @@ def test_path_invalido_lanza_error(monitor):
     with pytest.raises(StorageError ) as exc:
         monitor.check_disk_usage("path_que_no_existe")
     assert "path_que_no_existe" in str(exc.value)
+
+
+# Los 3 casos límite como tuplas (total, used, free)
+BOUNDARY_CASES = [
+    (100*(1024**3), 79*(1024**3), 21*(1024**3), "healthy"),   # 79%
+    (100*(1024**3), 80*(1024**3), 20*(1024**3), "warning"),   # 80% exacto
+    (100*(1024**3), 95*(1024**3),  5*(1024**3), "critical"),  # 95% exacto
+]
+
+@pytest.mark.parametrize("total, used, free, expected_status", BOUNDARY_CASES)
+def test_boundary_thresholds(monitor, total, used, free, expected_status):
+    with patch("shutil.disk_usage", return_value=(total, used, free)):
+        result = monitor.check_disk_usage("/")
+        assert result["status"] == expected_status
